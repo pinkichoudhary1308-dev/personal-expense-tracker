@@ -1,0 +1,24 @@
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+function PublicRoute({ children }) {
+
+    const { user } = useAuth();
+
+    const token =
+        localStorage.getItem("token");
+
+    if (user && token) {
+
+        return (
+            <Navigate
+                to="/dashboard"
+                replace
+            />
+        );
+    }
+
+    return children;
+}
+
+export default PublicRoute;

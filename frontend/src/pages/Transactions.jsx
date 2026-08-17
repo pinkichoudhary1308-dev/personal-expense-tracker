@@ -24,6 +24,7 @@ function Transactions() {
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+
     const [formData, setFormData] = useState({
         type: "EXPENSE",
         category: "",
@@ -35,25 +36,33 @@ function Transactions() {
     const [formError, setFormError] = useState("");
     const [formLoading, setFormLoading] = useState(false);
 
+    const [formCategoryError, setFormCategoryError] = useState("");
+
     const fetchTransactions = async () => {
+
         setLoading(true);
         setError("");
+
         try {
             const params = {
                 page,
                 size: pageSize,
                 sortBy,
-                direction,
+                direction
             };
-            if(period!="ALL"){
-                params.period=period;
+
+            if (period !== "ALL") {
+                params.period = period;
             }
+
             if (type) {
                 params.type = type;
             }
+
             if (category) {
                 params.category = category;
             }
+
             if (date) {
                 params.date = date;
             }
@@ -68,25 +77,34 @@ function Transactions() {
             setTransactions(
                 response.data.transactions
             );
+
             setTotalPages(
                 response.data.totalPages
             );
+
             setTotalElements(
                 response.data.totalElements
             );
 
         } catch (error) {
+
             console.error(error);
+
             setError(
                 "Unable to load transactions."
             );
+
         } finally {
+
             setLoading(false);
         }
     };
 
+
     useEffect(() => {
+
         fetchTransactions();
+
     }, [
         page,
         period,
@@ -98,18 +116,44 @@ function Transactions() {
     ]);
 
     const handleChange = (e) => {
+
         const {
             name,
             value
         } = e.target;
+
         setFormData((previous) => ({
             ...previous,
             [name]: value
         }));
+
+        if (name === "category") {
+
+            if (value === "") {
+                setFormCategoryError("");
+                return;
+            }
+
+            const categoryPattern =
+                /^[a-zA-Z]+(?: [a-zA-Z]*)*$/;
+
+            if (!categoryPattern.test(value)) {
+
+                setFormCategoryError(
+                    "Text only. Numbers and special characters are not allowed."
+                );
+
+            } else {
+
+                setFormCategoryError("");
+            }
+        }
     };
 
     const openAddForm = () => {
+
         setEditingId(null);
+
         setFormData({
             type: "EXPENSE",
             category: "",
@@ -117,12 +161,17 @@ function Transactions() {
             description: "",
             transactionDate: ""
         });
+
         setFormError("");
+        setFormCategoryError("");
+
         setShowForm(true);
     };
 
     const openEditForm = (transaction) => {
+
         setEditingId(transaction.id);
+
         setFormData({
             type: transaction.type,
             category: transaction.category,
@@ -132,42 +181,79 @@ function Transactions() {
             transactionDate:
                 transaction.transactionDate
         });
+
         setFormError("");
+        setFormCategoryError("");
+
         setShowForm(true);
     };
 
     const closeForm = () => {
+
         setShowForm(false);
         setEditingId(null);
         setFormError("");
+        setFormCategoryError("");
     };
 
     const handleSubmit = async (e) => {
+
         e.preventDefault();
+
         setFormError("");
+
+        const finalCategoryPattern =
+            /^[a-zA-Z]+(?: [a-zA-Z]+)*$/;
+
+        if (!finalCategoryPattern.test(
+            formData.category.trim()
+        )) {
+
+            setFormCategoryError(
+                "Text only. Numbers and special characters are not allowed."
+            );
+
+            return;
+        }
+
         setFormLoading(true);
+
         try {
+
             const requestData = {
                 type: formData.type,
-                category: formData.category,
-                amount: Number(formData.amount),
-                description: formData.description,
+
+                category:
+                    formData.category.trim(),
+
+                amount:
+                    Number(formData.amount),
+
+                description:
+                    formData.description,
+
                 transactionDate:
                     formData.transactionDate
             };
+
             if (editingId) {
+
                 await api.put(
                     `/transactions/${editingId}`,
                     requestData
                 );
+
             } else {
+
                 await api.post(
                     "/transactions",
                     requestData
                 );
             }
+
             closeForm();
             fetchTransactions();
+
         } catch (error) {
             console.error(error);
             if (error.response?.data?.error) {
@@ -179,16 +265,20 @@ function Transactions() {
                     "Unable to save transaction."
                 );
             }
+
         } finally {
+
             setFormLoading(false);
         }
     };
 
     const handleDelete = async (id) => {
+
         const confirmed =
             window.confirm(
                 "Are you sure you want to delete this transaction?"
             );
+
         if (!confirmed) {
             return;
         }
@@ -198,8 +288,11 @@ function Transactions() {
                 `/transactions/${id}`
             );
             fetchTransactions();
+
         } catch (error) {
+
             console.error(error);
+
             setError(
                 "Unable to delete transaction."
             );
@@ -207,6 +300,7 @@ function Transactions() {
     };
 
     const clearFilters = () => {
+
         setPeriod("ALL");
         setType("");
         setCategory("");
@@ -219,17 +313,21 @@ function Transactions() {
         setPage(0);
     };
 
+
     const handleTypeChange = (e) => {
+
         setType(e.target.value);
         setPage(0);
     };
 
-    const handleCategoryChange = (e) => {
+    const handleCategoryFilterChange = (e) => {
+
         setCategory(e.target.value);
         setPage(0);
     };
 
     const handleDateChange = (e) => {
+
         setDate(e.target.value);
         setPage(0);
     };
@@ -240,6 +338,7 @@ function Transactions() {
         setPage(0);
     };
 
+
     const handleDirectionChange = (e) => {
         setDirection(e.target.value);
         setPage(0);
@@ -249,9 +348,12 @@ function Transactions() {
         <div>
             <Navbar />
             <main className="transactions-container">
+
                 <div className="transactions-header">
                     <div>
-                        <h1>Transactions</h1>
+                        <h1>
+                            Transactions
+                        </h1>
                         <p>
                             Manage your income and expenses
                         </p>
@@ -263,6 +365,7 @@ function Transactions() {
                     >
                         + Add Transaction
                     </button>
+
                 </div>
 
                 <div className="filters-card">
@@ -274,22 +377,44 @@ function Transactions() {
                             value={period}
                             onChange={handlePeriodChange}
                         >
-                            <option value="ALL">All</option>
-                            <option value="WEEK">This Week</option>
-                            <option value="MONTH">This Month</option>
-                            <option value="YEAR">This Year</option>
+
+                            <option value="ALL">
+                                All
+                            </option>
+
+                            <option value="WEEK">
+                                This Week
+                            </option>
+
+                            <option value="MONTH">
+                                This Month
+                            </option>
+
+                            <option value="YEAR">
+                                This Year
+                            </option>
                         </select>
                     </div>
 
                     <div className="filter-group">
-                        <label>Type</label>
+                        <label>
+                            Type
+                        </label>
                         <select
                             value={type}
                             onChange={handleTypeChange}
                         >
-                            <option value="">All Types</option>
-                            <option value="INCOME">Income</option>
-                            <option value="EXPENSE">Expense</option>
+                            <option value="">
+                                All Types
+                            </option>
+
+                            <option value="INCOME">
+                                Income
+                            </option>
+
+                            <option value="EXPENSE">
+                                Expense
+                            </option>
                         </select>
                     </div>
 
@@ -301,7 +426,9 @@ function Transactions() {
                             type="text"
                             placeholder="e.g. Food"
                             value={category}
-                            onChange={handleCategoryChange}
+                            onChange={
+                                handleCategoryFilterChange
+                            }
                         />
                     </div>
 
@@ -324,10 +451,22 @@ function Transactions() {
                             value={sortBy}
                             onChange={handleSortChange}
                         >
-                            <option value="transactionDate">Date</option>
-                            <option value="amount">Amount</option>
-                            <option value="category">Category</option>
-                            <option value="type">Type</option>
+
+                            <option value="transactionDate">
+                                Date
+                            </option>
+
+                            <option value="amount">
+                                Amount
+                            </option>
+
+                            <option value="category">
+                                Category
+                            </option>
+
+                            <option value="type">
+                                Type
+                            </option>
                         </select>
                     </div>
 
@@ -337,10 +476,17 @@ function Transactions() {
                         </label>
                         <select
                             value={direction}
-                            onChange={handleDirectionChange}
+                            onChange={
+                                handleDirectionChange
+                            }
                         >
-                            <option value="desc">Descending</option>
-                            <option value="asc">Ascending</option>
+                            <option value="desc">
+                                Descending
+                            </option>
+
+                            <option value="asc">
+                                Ascending
+                            </option>
                         </select>
                     </div>
 
@@ -350,6 +496,7 @@ function Transactions() {
                     >
                         Clear Filters
                     </button>
+
                 </div>
 
                 {error && (
@@ -363,6 +510,7 @@ function Transactions() {
                         <div className="table-message">
                             Loading transactions...
                         </div>
+
                     ) : transactions.length === 0 ? (
                         <div className="table-message">
                             <p>
@@ -377,6 +525,7 @@ function Transactions() {
                         </div>
 
                     ) : (
+
                         <>
                             <div className="table-wrapper">
                                 <table>
@@ -385,18 +534,23 @@ function Transactions() {
                                             <th>
                                                 Date
                                             </th>
+
                                             <th>
                                                 Type
                                             </th>
+
                                             <th>
                                                 Category
                                             </th>
+
                                             <th>
                                                 Description
                                             </th>
+
                                             <th>
                                                 Amount
                                             </th>
+
                                             <th>
                                                 Actions
                                             </th>
@@ -411,12 +565,16 @@ function Transactions() {
                                                         transaction.id
                                                     }
                                                 >
+
                                                     <td>
                                                         {
                                                             transaction.transactionDate
                                                         }
                                                     </td>
+
+
                                                     <td>
+
                                                         <span
                                                             className={
                                                                 transaction.type ===
@@ -425,23 +583,33 @@ function Transactions() {
                                                                     : "transaction-expense"
                                                             }
                                                         >
+
                                                             {
                                                                 transaction.type
                                                             }
+
                                                         </span>
+
                                                     </td>
+
+
                                                     <td>
                                                         {
                                                             transaction.category
                                                         }
                                                     </td>
+
+
                                                     <td>
                                                         {
                                                             transaction.description ||
                                                             "-"
                                                         }
                                                     </td>
+
+
                                                     <td>
+
                                                         <span
                                                             className={
                                                                 transaction.type ===
@@ -450,18 +618,29 @@ function Transactions() {
                                                                     : "expense-text"
                                                             }
                                                         >
-                                                            {transaction.type ===
-                                                                "INCOME"
-                                                                ? "+"
-                                                                : "-"
+
+                                                            {
+                                                                transaction.type ===
+                                                                    "INCOME"
+                                                                    ? "+"
+                                                                    : "-"
                                                             }
-                                                            ₹{Number(
+
+                                                            ₹
+
+                                                            {Number(
                                                                 transaction.amount
                                                             ).toFixed(2)}
+
                                                         </span>
+
                                                     </td>
+
+
                                                     <td>
+
                                                         <div className="action-buttons">
+
                                                             <button
                                                                 className="edit-button"
                                                                 onClick={() =>
@@ -473,6 +652,7 @@ function Transactions() {
                                                                 Edit
                                                             </button>
 
+
                                                             <button
                                                                 className="delete-button"
                                                                 onClick={() =>
@@ -483,13 +663,20 @@ function Transactions() {
                                                             >
                                                                 Delete
                                                             </button>
+
                                                         </div>
+
                                                     </td>
+
                                                 </tr>
+
                                             )
                                         )}
+
                                     </tbody>
+
                                 </table>
+
                             </div>
 
                             <div className="pagination">
@@ -512,11 +699,13 @@ function Transactions() {
                                     </button>
 
                                     <span className="page-number">
+
                                         Page {page + 1}
                                         {" "}
                                         of
                                         {" "}
                                         {totalPages}
+
                                     </span>
 
                                     <button
@@ -556,6 +745,7 @@ function Transactions() {
                             >
                                 ×
                             </button>
+
                         </div>
 
                         {formError && (
@@ -564,10 +754,7 @@ function Transactions() {
                             </div>
                         )}
 
-                        <form
-                            onSubmit={handleSubmit}
-                        >
-
+                        <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label>
                                     Type
@@ -578,9 +765,17 @@ function Transactions() {
                                     onChange={handleChange}
                                     required
                                 >
-                                    <option value="EXPENSE">Expense</option>
-                                    <option value="INCOME">Income</option>
+
+                                    <option value="EXPENSE">
+                                        Expense
+                                    </option>
+
+                                    <option value="INCOME">
+                                        Income
+                                    </option>
+
                                 </select>
+
                             </div>
 
                             <div className="form-group">
@@ -595,12 +790,28 @@ function Transactions() {
                                     onChange={handleChange}
                                     required
                                 />
+
+                                {formCategoryError && (
+                                    <span
+                                        style={{
+                                            display: "block",
+                                            color: "#dc2626",
+                                            fontSize: "13px",
+                                            fontWeight: "600",
+                                            marginTop: "6px",
+                                            lineHeight: "1.4"
+                                        }}
+                                    >
+                                        {formCategoryError}
+                                    </span>
+                                )}
                             </div>
 
                             <div className="form-group">
                                 <label>
                                     Amount
                                 </label>
+
                                 <input
                                     type="number"
                                     name="amount"
@@ -661,6 +872,7 @@ function Transactions() {
                                             ? "Update"
                                             : "Add Transaction"
                                     }
+
                                 </button>
                             </div>
                         </form>

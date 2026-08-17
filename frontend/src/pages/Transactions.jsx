@@ -300,12 +300,14 @@ function Transactions() {
     };
 
     const clearFilters = () => {
-
         setPeriod("ALL");
         setType("");
         setCategory("");
         setDate("");
         setPage(0);
+        setSortBy("transactionDate");
+        setDirection("desc");
+        setError("");
     };
 
     const handlePeriodChange = (e) => {
@@ -315,19 +317,16 @@ function Transactions() {
 
 
     const handleTypeChange = (e) => {
-
         setType(e.target.value);
         setPage(0);
     };
 
     const handleCategoryFilterChange = (e) => {
-
         setCategory(e.target.value);
         setPage(0);
     };
 
     const handleDateChange = (e) => {
-
         setDate(e.target.value);
         setPage(0);
     };
@@ -491,6 +490,7 @@ function Transactions() {
                     </div>
 
                     <button
+                        type="button"
                         className="clear-filter-button"
                         onClick={clearFilters}
                     >

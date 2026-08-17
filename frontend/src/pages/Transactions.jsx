@@ -44,8 +44,10 @@ function Transactions() {
                 size: pageSize,
                 sortBy,
                 direction,
-                period
             };
+            if(period!="ALL"){
+                params.period=period;
+            }
             if (type) {
                 params.type = type;
             }
